@@ -1,0 +1,77 @@
+name: Scheduled OHLCV to HuggingFace
+
+on:
+  schedule:
+    # Runs at 6:00 AM UTC every day (after US markets close)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      tickers:
+        description: 'Space-separated list of tickers'
+        required: false
+        default: 'AAPL MSFT GOOGL'
+      start_date:
+        description: 'Start date (YYYY-MM-DD) or leave empty for all data'
+        required: false
+      end_date:
+        description: 'End date (YYYY-MM-DD) or leave empty for today'
+        required: false
+
+env:
+  # Configure these for your pipeline
+  REPO_ID: ${{ vars.HF_REPO_ID }}
+  DEFAULT_TICKERS: 'AAPL MSFT GOOGL AMZN NVDA'
+
+jobs:
+  push-ohlcv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
+
+      - name: Run OHLCV pipeline
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Use workflow_dispatch inputs if available, otherwise defaults
+          TICKERS="${{ github.event.inputs.tickers || env.DEFAULT_TICKERS }}"
+          START_DATE="${{ github.event.inputs.start_date }}"
+          END_DATE="${{ github.event.inputs.end_date }}"
+
+          # Build command
+          CMD="poetry run python scripts/push_ohlcv_to_hf.py --repo-id ${{ env.REPO_ID }} --create-repo --tickers $TICKERS"
+
+          if [ -n "$START_DATE" ]; then
+            CMD="$CMD --start-date $START_DATE"
+          fi
+
+          if [ -n "$END_DATE" ]; then
+            CMD="$CMD --end-date $END_DATE"
+          fi
+
+          echo "Running: $CMD"
+          $CMD

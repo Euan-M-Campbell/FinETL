@@ -15,7 +15,6 @@ from finetl.config.schema import (
     StatementType,
 )
 from finetl.extraction import YFinanceExtractor
-from finetl.models import ExtractedData
 
 
 @pytest.fixture

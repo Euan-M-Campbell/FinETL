@@ -92,11 +92,50 @@ class ExtractionConfig(BaseModel):
     data_types: DataTypesConfig
 
 
+class IfExistsType(str, Enum):
+    """Behavior when table already exists."""
+
+    FAIL = "fail"
+    REPLACE = "replace"
+    APPEND = "append"
+
+
 class LoadingConfig(BaseModel):
     """Configuration for data loading."""
 
-    destination: Literal["csv"] = "csv"
+    destination: Literal["csv", "parquet", "huggingface", "postgresql"] = "csv"
     path: str = "./output"
+
+    # HuggingFace-specific options
+    repo_id: str | None = None
+    private: bool = False
+
+    # PostgreSQL-specific options
+    host: str | None = None
+    port: int = 5432
+    database: str | None = None
+    schema_name: str = "public"
+    user: str | None = None
+    password: str | None = None
+    if_exists: IfExistsType = IfExistsType.APPEND
+
+    @model_validator(mode="after")
+    def validate_destination_config(self) -> "LoadingConfig":
+        if self.destination == "huggingface" and not self.repo_id:
+            raise ValueError("repo_id is required for huggingface destination")
+        if self.destination == "postgresql":
+            missing = []
+            if not self.host:
+                missing.append("host")
+            if not self.database:
+                missing.append("database")
+            if not self.user:
+                missing.append("user")
+            if not self.password:
+                missing.append("password")
+            if missing:
+                raise ValueError(f"PostgreSQL requires: {', '.join(missing)}")
+        return self
 
 
 class FinETLConfig(BaseModel):

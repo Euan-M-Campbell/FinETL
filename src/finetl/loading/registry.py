@@ -3,10 +3,16 @@
 from finetl.base import BaseLoader
 from finetl.exceptions import ConfigurationError
 from finetl.loading.csv import CSVLoader
+from finetl.loading.huggingface import HuggingFaceLoader
+from finetl.loading.parquet import ParquetLoader
+from finetl.loading.postgresql import PostgreSQLLoader
 
 # Registry mapping destination type strings to loader classes
 _LOADER_REGISTRY: dict[str, type[BaseLoader]] = {
     "csv": CSVLoader,
+    "parquet": ParquetLoader,
+    "huggingface": HuggingFaceLoader,
+    "postgresql": PostgreSQLLoader,
 }
 
 

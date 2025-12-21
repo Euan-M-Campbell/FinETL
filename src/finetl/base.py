@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from finetl.config.schema import ExtractionConfig, LoadingConfig
+    from finetl.config.schema import LoadingConfig
     from finetl.models import ExtractedData
 
 

@@ -5,10 +5,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from finetl.config.schema import LoadingConfig
-from finetl.loading import CSVLoader, get_loader, register_loader
 from finetl.base import BaseLoader
+from finetl.config.schema import LoadingConfig
 from finetl.exceptions import ConfigurationError
+from finetl.loading import CSVLoader, get_loader, register_loader
 from finetl.models import ExtractedData
 
 

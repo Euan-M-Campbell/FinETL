@@ -37,7 +37,9 @@ class YFinanceExtractor(BaseExtractor):
             ohlcv_df = self._extract_ohlcv()
 
         if data_types.financials and data_types.financials.enabled:
-            logger.info("Extracting financial statements for %d tickers", len(self.tickers))
+            logger.info(
+                "Extracting financial statements for %d tickers", len(self.tickers)
+            )
             financials_df = self._extract_financials()
 
         return ExtractedData(ohlcv=ohlcv_df, financials=financials_df)
@@ -122,7 +124,9 @@ class YFinanceExtractor(BaseExtractor):
                     ticker_financials["ticker"] = ticker_symbol
                     all_ticker_data.append(ticker_financials)
             except Exception as e:
-                logger.warning("Failed to extract financials for %s: %s", ticker_symbol, e)
+                logger.warning(
+                    "Failed to extract financials for %s: %s", ticker_symbol, e
+                )
 
         if not all_ticker_data:
             logger.warning("No financial data extracted")
@@ -172,7 +176,11 @@ class YFinanceExtractor(BaseExtractor):
         """Get a single financial statement and transpose it."""
         try:
             if statement_type == StatementType.BALANCE_SHEET:
-                raw = ticker.quarterly_balance_sheet if quarterly else ticker.balance_sheet
+                raw = (
+                    ticker.quarterly_balance_sheet
+                    if quarterly
+                    else ticker.balance_sheet
+                )
             elif statement_type == StatementType.INCOME_STATEMENT:
                 raw = ticker.quarterly_financials if quarterly else ticker.financials
             elif statement_type == StatementType.CASH_FLOW:

@@ -1,18 +1,16 @@
 """Loader registry for mapping destination types to loader classes."""
 
-from typing import Type
-
 from finetl.base import BaseLoader
 from finetl.exceptions import ConfigurationError
 from finetl.loading.csv import CSVLoader
 
 # Registry mapping destination type strings to loader classes
-_LOADER_REGISTRY: dict[str, Type[BaseLoader]] = {
+_LOADER_REGISTRY: dict[str, type[BaseLoader]] = {
     "csv": CSVLoader,
 }
 
 
-def get_loader(destination: str) -> Type[BaseLoader]:
+def get_loader(destination: str) -> type[BaseLoader]:
     """Get a loader class by destination type.
 
     Args:
@@ -33,7 +31,7 @@ def get_loader(destination: str) -> Type[BaseLoader]:
     return loader_class
 
 
-def register_loader(destination: str, loader_class: Type[BaseLoader]) -> None:
+def register_loader(destination: str, loader_class: type[BaseLoader]) -> None:
     """Register a new loader class for a destination type.
 
     Args:

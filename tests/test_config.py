@@ -13,7 +13,6 @@ from finetl.config import (
     FinETLConfig,
     Frequency,
     Interval,
-    LoadingConfig,
     OHLCVConfig,
     StatementType,
     load_config,

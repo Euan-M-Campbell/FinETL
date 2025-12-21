@@ -8,7 +8,6 @@ import pytest
 import yaml
 
 from finetl import FinETL
-from finetl.config.schema import FinETLConfig
 from finetl.exceptions import ConfigurationError
 
 
@@ -49,7 +48,7 @@ class TestFinETL:
 
         etl = FinETL.from_dict(sample_config_dict)
 
-        # Create mock OHLCV data (simulating yfinance download return for single ticker format)
+        # Create mock OHLCV data (simulating yfinance download return)
         dates = pd.date_range("2024-01-02", periods=2, freq="D", name="Date")
         mock_ohlcv = pd.DataFrame(
             {

@@ -1,0 +1,27 @@
+name: "tech-stocks"
+
+extraction:
+  source: yfinance
+  tickers:
+    - AAPL
+    - MSFT
+    - GOOGL
+
+  data_types:
+    ohlcv:
+      enabled: true
+      start_date: "2024-01-01"
+      end_date: "2024-12-01"
+      interval: "1d"
+
+    financials:
+      enabled: true
+      frequency: "quarterly"
+      statements:
+        - balance_sheet
+        - income_statement
+        - cash_flow
+
+loading:
+  destination: csv
+  path: "./output"

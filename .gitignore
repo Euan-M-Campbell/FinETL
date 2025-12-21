@@ -1,6 +1,9 @@
 # Output
 output/
 
+# Plans
+.plans/
+
 # Python
 __pycache__/
 *.py[cod]

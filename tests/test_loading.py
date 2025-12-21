@@ -8,7 +8,7 @@ import pytest
 from finetl.base import BaseLoader
 from finetl.config.schema import LoadingConfig
 from finetl.exceptions import ConfigurationError
-from finetl.loading import CSVLoader, get_loader, register_loader
+from finetl.loading import CSVLoader, ParquetLoader, get_loader, register_loader
 from finetl.models import ExtractedData
 
 
@@ -92,12 +92,111 @@ class TestCSVLoader:
         assert (nested_path / "ohlcv.csv").exists()
 
 
+class TestParquetLoader:
+    """Tests for ParquetLoader."""
+
+    def test_load_ohlcv_only(
+        self,
+        tmp_path: Path,
+        sample_ohlcv_df: pd.DataFrame,
+    ):
+        config = LoadingConfig(destination="parquet", path=str(tmp_path / "output"))
+        loader = ParquetLoader(config)
+
+        data = ExtractedData(ohlcv=sample_ohlcv_df, financials=None)
+        loader.load(data)
+
+        ohlcv_path = tmp_path / "output" / "ohlcv.parquet"
+        assert ohlcv_path.exists()
+
+        loaded = pd.read_parquet(ohlcv_path)
+        assert len(loaded) == len(sample_ohlcv_df)
+        assert list(loaded.columns) == list(sample_ohlcv_df.columns)
+
+    def test_load_financials_only(
+        self,
+        tmp_path: Path,
+        sample_financials_df: pd.DataFrame,
+    ):
+        config = LoadingConfig(destination="parquet", path=str(tmp_path / "output"))
+        loader = ParquetLoader(config)
+
+        data = ExtractedData(ohlcv=None, financials=sample_financials_df)
+        loader.load(data)
+
+        financials_path = tmp_path / "output" / "financials.parquet"
+        assert financials_path.exists()
+
+        loaded = pd.read_parquet(financials_path)
+        assert len(loaded) == len(sample_financials_df)
+
+    def test_load_both(
+        self,
+        tmp_path: Path,
+        sample_extracted_data: ExtractedData,
+    ):
+        config = LoadingConfig(destination="parquet", path=str(tmp_path / "output"))
+        loader = ParquetLoader(config)
+
+        loader.load(sample_extracted_data)
+
+        ohlcv_path = tmp_path / "output" / "ohlcv.parquet"
+        financials_path = tmp_path / "output" / "financials.parquet"
+        assert ohlcv_path.exists()
+        assert financials_path.exists()
+
+    def test_load_empty_data(self, tmp_path: Path):
+        config = LoadingConfig(destination="parquet", path=str(tmp_path / "output"))
+        loader = ParquetLoader(config)
+
+        data = ExtractedData(ohlcv=None, financials=None)
+        loader.load(data)
+
+        # No files should be created
+        output_dir = tmp_path / "output"
+        assert not output_dir.exists() or not any(output_dir.iterdir())
+
+    def test_load_creates_directory(
+        self,
+        tmp_path: Path,
+        sample_ohlcv_df: pd.DataFrame,
+    ):
+        nested_path = tmp_path / "deep" / "nested" / "output"
+        config = LoadingConfig(destination="parquet", path=str(nested_path))
+        loader = ParquetLoader(config)
+
+        data = ExtractedData(ohlcv=sample_ohlcv_df, financials=None)
+        loader.load(data)
+
+        assert nested_path.exists()
+        assert (nested_path / "ohlcv.parquet").exists()
+
+    def test_parquet_data_integrity(
+        self,
+        tmp_path: Path,
+        sample_ohlcv_df: pd.DataFrame,
+    ):
+        """Verify data matches after round-trip through Parquet."""
+        config = LoadingConfig(destination="parquet", path=str(tmp_path / "output"))
+        loader = ParquetLoader(config)
+
+        data = ExtractedData(ohlcv=sample_ohlcv_df, financials=None)
+        loader.load(data)
+
+        loaded = pd.read_parquet(tmp_path / "output" / "ohlcv.parquet")
+        pd.testing.assert_frame_equal(loaded, sample_ohlcv_df)
+
+
 class TestLoaderRegistry:
     """Tests for loader registry."""
 
     def test_get_csv_loader(self):
         loader_class = get_loader("csv")
         assert loader_class == CSVLoader
+
+    def test_get_parquet_loader(self):
+        loader_class = get_loader("parquet")
+        assert loader_class == ParquetLoader
 
     def test_get_unknown_loader(self):
         with pytest.raises(ConfigurationError, match="Unsupported destination type"):

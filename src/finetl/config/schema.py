@@ -95,7 +95,7 @@ class ExtractionConfig(BaseModel):
 class LoadingConfig(BaseModel):
     """Configuration for data loading."""
 
-    destination: Literal["csv"] = "csv"
+    destination: Literal["csv", "parquet"] = "csv"
     path: str = "./output"
 
 

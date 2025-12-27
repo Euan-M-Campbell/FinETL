@@ -19,7 +19,7 @@ on:
 
 env:
   # Configure these for your pipeline
-  REPO_ID: ${{ vars.HF_REPO_ID }}
+  REPO_ID: ${{ secrets.HF_REPO_ID }}
   DEFAULT_TICKERS: 'AAPL MSFT GOOGL AMZN NVDA'
 
 jobs:
@@ -53,6 +53,17 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.HF_REPO_ID }}" ]; then
+            echo "::error::HF_REPO_ID secret is not set. Please add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.HF_TOKEN }}" ]; then
+            echo "::error::HF_TOKEN secret is not set. Please add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Run OHLCV pipeline
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -62,16 +73,16 @@ jobs:
           START_DATE="${{ github.event.inputs.start_date }}"
           END_DATE="${{ github.event.inputs.end_date }}"
 
-          # Build command
-          CMD="poetry run python scripts/push_ohlcv_to_hf.py --repo-id ${{ env.REPO_ID }} --create-repo --tickers $TICKERS"
+          # Build command with proper quoting
+          CMD="poetry run python scripts/push_ohlcv_to_hf.py --repo-id '${{ env.REPO_ID }}' --create-repo --tickers $TICKERS"
 
           if [ -n "$START_DATE" ]; then
-            CMD="$CMD --start-date $START_DATE"
+            CMD="$CMD --start-date '$START_DATE'"
           fi
 
           if [ -n "$END_DATE" ]; then
-            CMD="$CMD --end-date $END_DATE"
+            CMD="$CMD --end-date '$END_DATE'"
           fi
 
           echo "Running: $CMD"
-          $CMD
+          eval $CMD

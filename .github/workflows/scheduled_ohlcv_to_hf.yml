@@ -25,6 +25,7 @@ env:
 jobs:
   push-ohlcv:
     runs-on: ubuntu-latest
+    environment: HF_OHLCV_Environment
 
     steps:
       - name: Checkout code
